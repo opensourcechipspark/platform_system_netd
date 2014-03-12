@@ -20,11 +20,15 @@ LOCAL_SRC_FILES:=                                      \
                   ResolverController.cpp               \
                   SecondaryTableController.cpp         \
                   SoftapController.cpp                 \
+                  SoftapController_rtl.cpp             \
                   TetherController.cpp                 \
                   oem_iptables_hook.cpp                \
                   UidMarkMap.cpp                       \
                   main.cpp                             \
 
+ifeq ($(strip $(FORCE_WIFI_WORK_AS_ANDROID4_2)), true)
+LOCAL_SRC_FILES += SoftapController_mt5931.cpp
+endif
 
 LOCAL_MODULE:= netd
 
@@ -37,6 +41,10 @@ LOCAL_C_INCLUDES := $(KERNEL_HEADERS) \
                     $(call include-path-for, libhardware_legacy)/hardware_legacy
 
 LOCAL_CFLAGS := -Werror=format
+
+ifeq ($(strip $(FORCE_WIFI_WORK_AS_ANDROID4_2)), true)
+LOCAL_CFLAGS += -DFORCE_WIFI_ANDROID4_2
+endif
 
 LOCAL_SHARED_LIBRARIES := libstlport libsysutils liblog libcutils libnetutils \
                           libcrypto libhardware_legacy libmdnssd libdl \

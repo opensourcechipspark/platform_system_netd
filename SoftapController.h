@@ -32,14 +32,59 @@ public:
     SoftapController();
     virtual ~SoftapController();
 
+    virtual int startSoftap();
+    virtual int stopSoftap();
+    virtual bool isSoftapStarted();
+    virtual int setSoftap(int argc, char *argv[]);
+    virtual int fwReloadSoftap(int argc, char *argv[]);
+
+private:
+    pid_t mPid;
+    void generatePsk(char *ssid, char *passphrase, char *psk);
+};
+
+class SoftapController_rtl : public SoftapController {
+public:
+    SoftapController_rtl();
+    ~SoftapController_rtl();
+
     int startSoftap();
     int stopSoftap();
     bool isSoftapStarted();
     int setSoftap(int argc, char *argv[]);
     int fwReloadSoftap(int argc, char *argv[]);
+
 private:
     pid_t mPid;
     void generatePsk(char *ssid, char *passphrase, char *psk);
+};
+
+#define AP_CONNECT_TO_DAEMON_DELAY  100000
+class SoftapController_mt5931 : public SoftapController {
+public:
+    SoftapController_mt5931();
+    ~SoftapController_mt5931();
+
+    int startSoftap();
+    int stopSoftap();
+    bool isSoftapStarted();
+    int setSoftap(int argc, char *argv[]);
+    int fwReloadSoftap(int argc, char *argv[]);
+
+private:
+    char mBuf[SOFTAP_MAX_BUFFER_SIZE];
+    char mIface[IFNAMSIZ];
+    pid_t mPid;
+    int mSock;
+    int mDaemonState;
+
+    int setConfig(const char *cmd, const char *arg);
+    int setCommand(char *iface, const char *cmd, unsigned buflen=0);
+    void generatePsk(char *ssid, char *passphrase, char *psk);
+    int startDriver(char *iface);
+    int stopDriver(char *iface);
+    int clientsSoftap(char **retbuf);
+    int getChannelList(int buf_len, char *buf_list);
 };
 
 #endif

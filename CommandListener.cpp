@@ -40,6 +40,7 @@
 #include "oem_iptables_hook.h"
 #include "NetdConstants.h"
 #include "FirewallController.h"
+#include "wifi_old.h"
 
 TetherController *CommandListener::sTetherCtrl = NULL;
 NatController *CommandListener::sNatCtrl = NULL;
@@ -153,8 +154,8 @@ CommandListener::CommandListener(UidMarkMap *map) :
         sNatCtrl = new NatController(sSecondaryTableCtrl);
     if (!sPppCtrl)
         sPppCtrl = new PppController();
-    if (!sSoftapCtrl)
-        sSoftapCtrl = new SoftapController();
+    //if (!sSoftapCtrl)
+    //    sSoftapCtrl = new SoftapController();
     if (!sBandwidthCtrl)
         sBandwidthCtrl = new BandwidthController();
     if (!sIdletimerCtrl)
@@ -896,6 +897,24 @@ int CommandListener::SoftapCmd::runCommand(SocketClient *cli,
     int rc = ResponseCode::SoftapStatusResult;
     int flag = 0;
     char *retbuf = NULL;
+
+#ifdef FORCE_WIFI_ANDROID4_2
+    if (!sSoftapCtrl) {
+        int chip_type = check_wifi_chip_type();
+        if(chip_type == MT5931) {
+            sSoftapCtrl = new SoftapController_mt5931();
+	} else if ((chip_type == RTL8188EU) || (chip_type == RTL8188CU) || (chip_type == RTL8189ES)
+            || (chip_type == RTL8723AS) || (chip_type == RTL8723AU) || (chip_type == RTL8192DU)) {
+            sSoftapCtrl = new SoftapController_rtl();
+        } else {
+            sSoftapCtrl = new SoftapController();
+        }
+    }
+#else
+    if (!sSoftapCtrl) {
+        sSoftapCtrl = new SoftapController();
+    }
+#endif
 
     if (sSoftapCtrl == NULL) {
       cli->sendMsg(ResponseCode::ServiceStartFailed, "SoftAP is not available", false);
