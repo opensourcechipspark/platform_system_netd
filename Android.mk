@@ -19,8 +19,7 @@ LOCAL_SRC_FILES:=                                      \
                   PppController.cpp                    \
                   ResolverController.cpp               \
                   SecondaryTableController.cpp         \
-                  SoftapController.cpp                 \
-                  SoftapController_rtl.cpp             \
+                  SoftapController_rtl.cpp	       	   \
                   TetherController.cpp                 \
                   oem_iptables_hook.cpp                \
                   UidMarkMap.cpp                       \
@@ -42,10 +41,27 @@ LOCAL_C_INCLUDES := $(KERNEL_HEADERS) \
 
 LOCAL_CFLAGS := -Werror=format
 
+ 
+
+ifeq ($(BOARD_WLAN_DEVICE), mtk)
+LOCAL_CFLAGS += -DCONFIG_P2P_AUTO_GO_AS_SOFTAP
+endif
+
+ifeq ($(BOARD_WLAN_DEVICE), mtk)
+LOCAL_SRC_FILES += SoftapController_mt7601.cpp
+else 
+LOCAL_SRC_FILES += SoftapController.cpp
+endif
+
+
+
 ifeq ($(strip $(FORCE_WIFI_WORK_AS_ANDROID4_2)), true)
 LOCAL_CFLAGS += -DFORCE_WIFI_ANDROID4_2
 endif
 
+ifeq ($(strip $(BOARD_WIFI_VENDOR)), Espressif)
+LOCAL_CFLAGS += -DWIFI_CHIP_TYPE_ESP8089
+endif
 LOCAL_SHARED_LIBRARIES := libstlport libsysutils liblog libcutils libnetutils \
                           libcrypto libhardware_legacy libmdnssd libdl \
                           liblogwrap

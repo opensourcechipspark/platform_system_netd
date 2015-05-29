@@ -78,7 +78,6 @@ static const char* FILTER_OUTPUT[] = {
         OEM_IPTABLES_FILTER_OUTPUT,
         FirewallController::LOCAL_OUTPUT,
         BandwidthController::LOCAL_OUTPUT,
-        SecondaryTableController::LOCAL_FILTER_OUTPUT,
         NULL,
 };
 
@@ -91,11 +90,11 @@ static const char* RAW_PREROUTING[] = {
 static const char* MANGLE_POSTROUTING[] = {
         BandwidthController::LOCAL_MANGLE_POSTROUTING,
         IdletimerController::LOCAL_MANGLE_POSTROUTING,
+        SecondaryTableController::LOCAL_MANGLE_POSTROUTING,
         NULL,
 };
 
 static const char* MANGLE_OUTPUT[] = {
-        SecondaryTableController::LOCAL_MANGLE_EXEMPT,
         SecondaryTableController::LOCAL_MANGLE_OUTPUT,
         NULL,
 };
@@ -931,7 +930,11 @@ int CommandListener::SoftapCmd::runCommand(SocketClient *cli,
     } else if (!strcmp(argv[1], "stopap")) {
         rc = sSoftapCtrl->stopSoftap();
     } else if (!strcmp(argv[1], "fwreload")) {
+	  #ifdef WIFI_CHIP_TYPE_ESP8089
+	   rc = 0;
+	  #else
         rc = sSoftapCtrl->fwReloadSoftap(argc, argv);
+      #endif
     } else if (!strcmp(argv[1], "status")) {
         asprintf(&retbuf, "Softap service %s running",
                  (sSoftapCtrl->isSoftapStarted() ? "is" : "is not"));
@@ -1034,9 +1037,11 @@ int CommandListener::ResolverCmd::runCommand(SocketClient *cli, int argc, char *
                     "Wrong number of arguments to resolver setifaceforuid", false);
             return 0;
         }
-    } else if (!strcmp(argv[1], "clearifaceforuidrange")) { // resolver clearifaceforuid <l> <h>
-        if (argc == 4) {
-            rc = sResolverCtrl->clearDnsInterfaceForUidRange(atoi(argv[2]), atoi(argv[3]));
+    } else if (!strcmp(argv[1], "clearifaceforuidrange")) {
+        // resolver clearifaceforuid <if> <l> <h>
+        if (argc == 5) {
+            rc = sResolverCtrl->clearDnsInterfaceForUidRange(argv[2], atoi(argv[3]),
+                    atoi(argv[4]));
         } else {
             cli->sendMsg(ResponseCode::CommandSyntaxError,
                     "Wrong number of arguments to resolver clearifaceforuid", false);

@@ -27,19 +27,53 @@
 #define AP_DRIVER_START_DELAY	800000
 #define AP_CHANNEL_DEFAULT	6
 
+ 
+#ifdef CONFIG_P2P_AUTO_GO_AS_SOFTAP
+#define AP_CONNECT_TO_DAEMON_DELAY  100000
+#endif
+ 
+
 class SoftapController {
 public:
     SoftapController();
     virtual ~SoftapController();
 
-    virtual int startSoftap();
-    virtual int stopSoftap();
-    virtual bool isSoftapStarted();
-    virtual int setSoftap(int argc, char *argv[]);
-    virtual int fwReloadSoftap(int argc, char *argv[]);
+ 
+#ifdef CONFIG_P2P_AUTO_GO_AS_SOFTAP
+	int startDriver(char *iface);
+	int stopDriver(char *iface);
+	int setCommand(char *iface, const char *cmd, unsigned buflen);
+	int setConfig(const char *cmd, const char *arg);
+#endif
+ 
+
+#ifdef CONFIG_P2P_AUTO_GO_AS_SOFTAP
+	int startSoftap();
+	int stopSoftap();
+	bool isSoftapStarted();
+	int setSoftap(int argc, char *argv[]);
+	int fwReloadSoftap(int argc, char *argv[]);
+
+#else
+	virtual int startSoftap();
+	virtual 	int stopSoftap();
+	virtual 	bool isSoftapStarted();
+	virtual 	int setSoftap(int argc, char *argv[]);
+	virtual 	int fwReloadSoftap(int argc, char *argv[]);
+
+#endif
+
 
 private:
     pid_t mPid;
+ 
+#ifdef CONFIG_P2P_AUTO_GO_AS_SOFTAP
+	int mSock;
+    int mDaemonState;
+    char mIface[IFNAMSIZ];
+    char mBuf[SOFTAP_MAX_BUFFER_SIZE];	
+#endif
+ 
     void generatePsk(char *ssid, char *passphrase, char *psk);
 };
 
